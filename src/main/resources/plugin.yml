@@ -1,0 +1,33 @@
+name: EconomyShop
+version: 1.0.0
+main: com.brunobeduschi.economyshop.EconomyShopPlugin
+description: Sistema de economia com loja via GUI
+author: BrunoBeduschi
+api-version: '26.1.2'
+
+libraries:
+  - org.xerial:sqlite-jdbc:3.53.2.0
+
+commands:
+  balance:
+    description: Mostra seu saldo ou o de outro jogador
+    usage: /balance [jogador]
+    aliases: [bal, saldo]
+  pay:
+    description: Transfere dinheiro para outro jogador
+    usage: /pay <jogador> <quantia>
+  shop:
+    description: Abre a loja
+    usage: /shop
+    aliases: [loja]
+  ecoadmin:
+    description: Comandos administrativos de economia
+    usage: /ecoadmin <give|take|set> <jogador> <quantia>
+
+permissions:
+  economyshop.balance.others:
+    description: Permite ver o saldo de outros jogadores
+    default: op
+  economyshop.admin:
+    description: Permite usar comandos administrativos de economia
+    default: op

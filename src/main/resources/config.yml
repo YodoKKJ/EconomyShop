@@ -1,0 +1,43 @@
+starting-balance: 100.0
+
+shop-items:
+  pao:
+    material: BREAD
+    name: "Pão"
+    buy-price: 5.0
+    sell-price: 2.0
+  ferro:
+    material: IRON_INGOT
+    name: "Lingote de Ferro"
+    buy-price: 20.0
+    sell-price: 10.0
+  ouro:
+    material: GOLD_INGOT
+    name: "Lingote de Ouro"
+    buy-price: 40.0
+    sell-price: 20.0
+  diamante:
+    material: DIAMOND
+    name: "Diamante"
+    buy-price: 150.0
+    sell-price: 90.0
+  esmeralda:
+    material: EMERALD
+    name: "Esmeralda"
+    buy-price: 100.0
+    sell-price: 60.0
+  madeira:
+    material: OAK_LOG
+    name: "Tora de Carvalho"
+    buy-price: 8.0
+    sell-price: 3.0
+  pedra:
+    material: STONE
+    name: "Pedra"
+    buy-price: 2.0
+    sell-price: 0.5
+  couro:
+    material: LEATHER
+    name: "Couro"
+    buy-price: 10.0
+    sell-price: 4.0
