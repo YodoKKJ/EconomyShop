@@ -8,6 +8,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.ShadowColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -43,6 +44,7 @@ public class ChatFormatListener implements Listener {
         if (tag.badgeChar() != null) {
             Component glyph = Component.text(String.valueOf(tag.badgeChar()))
                     .color(NamedTextColor.WHITE)
+                    .shadowColor(ShadowColor.none())
                     .font(BADGE_FONT);
             return Component.empty().append(glyph).append(Component.text(" "));
         }

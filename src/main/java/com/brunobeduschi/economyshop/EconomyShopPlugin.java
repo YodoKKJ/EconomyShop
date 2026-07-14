@@ -30,6 +30,11 @@ public final class EconomyShopPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        // Preenche no config.yml em disco quaisquer chaves novas que passaram a existir
+        // no config.yml padrão do plugin desde a última vez que ele rodou nesse servidor,
+        // sem sobrescrever nada que já esteja configurado.
+        getConfig().options().copyDefaults(true);
+        saveConfig();
 
         try {
             economyManager = new EconomyManager(this);

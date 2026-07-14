@@ -84,7 +84,8 @@ public class TagManager {
 
     public void createTag(String id, String display, NamedTextColor color) {
         String key = id.toLowerCase();
-        tags.put(key, new Tag(key, display, color, null));
+        Character badgeChar = BADGE_CHARS.get(key);
+        tags.put(key, new Tag(key, display, color, badgeChar));
         customTagsData.set("tags." + key + ".display", display);
         customTagsData.set("tags." + key + ".color", NamedTextColor.NAMES.key(color));
         try {
