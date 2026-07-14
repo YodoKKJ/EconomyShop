@@ -11,6 +11,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -26,16 +27,38 @@ public class TagCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(Component.text("Uso: /tag <set|list>", NamedTextColor.RED));
+            sender.sendMessage(Component.text("Uso: /tag <set|create|list>", NamedTextColor.RED));
             return true;
         }
 
         switch (args[0].toLowerCase()) {
             case "list" -> showTags(sender);
             case "set" -> setTag(sender, args);
-            default -> sender.sendMessage(Component.text("Uso: /tag <set|list>", NamedTextColor.RED));
+            case "create" -> createTag(sender, args);
+            default -> sender.sendMessage(Component.text("Uso: /tag <set|create|list>", NamedTextColor.RED));
         }
         return true;
+    }
+
+    private void createTag(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("economyshop.tag.admin")) {
+            sender.sendMessage(Component.text("Você não tem permissão para isso.", NamedTextColor.RED));
+            return;
+        }
+        if (args.length < 4) {
+            sender.sendMessage(Component.text("Uso: /tag create <id> <cor> <texto de exibição>", NamedTextColor.RED));
+            return;
+        }
+        String id = args[1].toLowerCase();
+        NamedTextColor color = plugin.getTagManager().parseColorOrNull(args[2]);
+        if (color == null) {
+            sender.sendMessage(Component.text("Cor inválida. Use uma cor nomeada, ex: gold, red, aqua, light_purple.", NamedTextColor.RED));
+            return;
+        }
+        String display = String.join(" ", Arrays.copyOfRange(args, 3, args.length));
+        plugin.getTagManager().createTag(id, display, color);
+        sender.sendMessage(Component.text("Tag '" + id + "' criada: ", NamedTextColor.GREEN)
+                .append(Component.text(display, color)));
     }
 
     private void showTags(CommandSender sender) {
@@ -71,7 +94,7 @@ public class TagCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            return Stream.of("set", "list")
+            return Stream.of("set", "create", "list")
                     .filter(option -> option.startsWith(args[0].toLowerCase()))
                     .collect(Collectors.toList());
         }
@@ -85,6 +108,11 @@ public class TagCommand implements CommandExecutor, TabCompleter {
             return plugin.getTagManager().getTags().stream()
                     .map(Tag::id)
                     .filter(id -> id.startsWith(args[2].toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+        if (args.length == 3 && args[0].equalsIgnoreCase("create")) {
+            return NamedTextColor.NAMES.keys().stream()
+                    .filter(name -> name.startsWith(args[2].toLowerCase()))
                     .collect(Collectors.toList());
         }
         return List.of();

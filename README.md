@@ -22,6 +22,7 @@ Plugin de economia para servidores Paper/Spigot, com saldo persistente em banco 
 | `/ecoadmin <give\|take\|set> <jogador> <valor>` | Administra o saldo de um jogador | `economyshop.admin` (padrão: OP) |
 | `/tag list` | Lista as tags disponíveis | — |
 | `/tag set <jogador> <tag>` | Define a tag de chat de um jogador | `economyshop.tag.admin` (padrão: OP) |
+| `/tag create <id> <cor> <texto>` | Cria uma nova tag em tempo real (sem precisar editar `config.yml` ou reiniciar) | `economyshop.tag.admin` (padrão: OP) |
 
 ## Configuração (`config.yml`)
 
@@ -51,7 +52,7 @@ shop-items:
 
 Cada entrada em `shop-items` vira um item clicável na loja. `material` é o nome de um `Material` do Bukkit; `buy-price`/`sell-price` podem ser omitidos ou zerados para desabilitar compra ou venda daquele item.
 
-Cada entrada em `tags` define uma tag disponível, com texto de exibição e cor. Adicionar uma nova tag é só adicionar uma nova entrada — sem precisar recompilar nada.
+Cada entrada em `tags` define uma tag disponível, com texto de exibição e cor. Além de editar o `config.yml`, também dá pra criar tags direto em jogo com `/tag create <id> <cor> <texto>` — elas ficam salvas em `tags.yml` e persistem entre reinícios.
 
 ## Arquitetura
 

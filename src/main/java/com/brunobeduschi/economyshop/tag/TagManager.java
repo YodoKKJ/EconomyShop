@@ -15,21 +15,26 @@ import java.util.Map;
 public class TagManager {
 
     private final EconomyShopPlugin plugin;
-    private final File file;
-    private final YamlConfiguration data;
+    private final File playerTagsFile;
+    private final YamlConfiguration playerTagsData;
+    private final File customTagsFile;
+    private final YamlConfiguration customTagsData;
     private final Map<String, Tag> tags = new LinkedHashMap<>();
     private final String defaultTagId;
 
     public TagManager(EconomyShopPlugin plugin) {
         this.plugin = plugin;
-        this.file = new File(plugin.getDataFolder(), "playertags.yml");
-        this.data = YamlConfiguration.loadConfiguration(file);
+        this.playerTagsFile = new File(plugin.getDataFolder(), "playertags.yml");
+        this.playerTagsData = YamlConfiguration.loadConfiguration(playerTagsFile);
+        this.customTagsFile = new File(plugin.getDataFolder(), "tags.yml");
+        this.customTagsData = YamlConfiguration.loadConfiguration(customTagsFile);
         this.defaultTagId = plugin.getConfig().getString("default-tag", "membro").toLowerCase();
-        loadTags();
+
+        loadTagsFrom(plugin.getConfig().getConfigurationSection("tags"));
+        loadTagsFrom(customTagsData.getConfigurationSection("tags"));
     }
 
-    private void loadTags() {
-        ConfigurationSection section = plugin.getConfig().getConfigurationSection("tags");
+    private void loadTagsFrom(ConfigurationSection section) {
         if (section == null) {
             return;
         }
@@ -49,8 +54,12 @@ public class TagManager {
         return color != null ? color : NamedTextColor.GRAY;
     }
 
+    public NamedTextColor parseColorOrNull(String name) {
+        return NamedTextColor.NAMES.value(name.toLowerCase());
+    }
+
     public Tag getTag(Player player) {
-        String id = data.getString(player.getUniqueId().toString(), defaultTagId).toLowerCase();
+        String id = playerTagsData.getString(player.getUniqueId().toString(), defaultTagId).toLowerCase();
         return tags.getOrDefault(id, getDefaultTag());
     }
 
@@ -62,12 +71,25 @@ public class TagManager {
         return tags.containsKey(id.toLowerCase());
     }
 
+    public void createTag(String id, String display, NamedTextColor color) {
+        String key = id.toLowerCase();
+        tags.put(key, new Tag(key, display, color));
+        customTagsData.set("tags." + key + ".display", display);
+        customTagsData.set("tags." + key + ".color", NamedTextColor.NAMES.key(color));
+        try {
+            plugin.getDataFolder().mkdirs();
+            customTagsData.save(customTagsFile);
+        } catch (IOException e) {
+            plugin.getLogger().severe("Falha ao salvar tag customizada: " + e.getMessage());
+        }
+    }
+
     public boolean setTag(Player player, String tagId) {
         if (!hasTag(tagId)) {
             return false;
         }
-        data.set(player.getUniqueId().toString(), tagId.toLowerCase());
-        save();
+        playerTagsData.set(player.getUniqueId().toString(), tagId.toLowerCase());
+        savePlayerTags();
         return true;
     }
 
@@ -75,10 +97,10 @@ public class TagManager {
         return tags.values();
     }
 
-    private void save() {
+    private void savePlayerTags() {
         try {
             plugin.getDataFolder().mkdirs();
-            data.save(file);
+            playerTagsData.save(playerTagsFile);
         } catch (IOException e) {
             plugin.getLogger().severe("Falha ao salvar tags dos jogadores: " + e.getMessage());
         }
