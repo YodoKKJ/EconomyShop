@@ -3,6 +3,9 @@ package com.brunobeduschi.economyshop.chatpack;
 import com.brunobeduschi.economyshop.EconomyShopPlugin;
 import com.sun.net.httpserver.HttpServer;
 
+import javax.imageio.ImageIO;
+import java.awt.Color;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -10,15 +13,20 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 public class ResourcePackServer {
 
     private final EconomyShopPlugin plugin;
     private HttpServer server;
+    private File sourceDir;
     private File packFile;
-    private String hash;
+    private volatile String hash;
     private String publicUrl;
 
     public ResourcePackServer(EconomyShopPlugin plugin) {
@@ -30,8 +38,13 @@ public class ResourcePackServer {
             return;
         }
         try {
-            packFile = extractPack();
-            hash = sha1(packFile);
+            sourceDir = new File(plugin.getDataFolder(), "resourcepack_src");
+            packFile = new File(plugin.getDataFolder(), "resourcepack.zip");
+
+            if (!sourceDir.exists()) {
+                extractPristineSource(sourceDir);
+            }
+            rebuildPack();
 
             int port = plugin.getConfig().getInt("resource-pack.port", 34567);
             server = HttpServer.create(new InetSocketAddress(port), 0);
@@ -60,18 +73,55 @@ public class ResourcePackServer {
         }
     }
 
-    private File extractPack() throws IOException {
-        File file = new File(plugin.getDataFolder(), "resourcepack.zip");
+    private void extractPristineSource(File targetDir) throws IOException {
+        targetDir.mkdirs();
         try (InputStream in = plugin.getResource("resourcepack/pack.zip")) {
             if (in == null) {
                 throw new IOException("resourcepack/pack.zip não encontrado dentro do jar");
             }
-            plugin.getDataFolder().mkdirs();
-            try (OutputStream out = new FileOutputStream(file)) {
-                in.transferTo(out);
+            try (ZipInputStream zis = new ZipInputStream(in)) {
+                ZipEntry entry;
+                while ((entry = zis.getNextEntry()) != null) {
+                    if (entry.getName().startsWith("META-INF/")) {
+                        continue;
+                    }
+                    File outFile = new File(targetDir, entry.getName());
+                    if (entry.isDirectory()) {
+                        outFile.mkdirs();
+                        continue;
+                    }
+                    outFile.getParentFile().mkdirs();
+                    try (OutputStream out = new FileOutputStream(outFile)) {
+                        zis.transferTo(out);
+                    }
+                }
             }
         }
-        return file;
+    }
+
+    public synchronized void rebuildPack() throws IOException, NoSuchAlgorithmException {
+        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(packFile))) {
+            Path root = sourceDir.toPath();
+            try (var stream = Files.walk(root)) {
+                java.util.List<Path> files = stream.filter(Files::isRegularFile).toList();
+                for (Path path : files) {
+                    String entryName = root.relativize(path).toString().replace('\\', '/');
+                    zos.putNextEntry(new ZipEntry(entryName));
+                    Files.copy(path, zos);
+                    zos.closeEntry();
+                }
+            }
+        }
+        hash = sha1(packFile);
+    }
+
+    public synchronized void updateBadgeColor(String tagId, String label, Color backgroundColor)
+            throws IOException, NoSuchAlgorithmException {
+        File textureFile = new File(sourceDir, "assets/minecraft/textures/font/badges/" + tagId + ".png");
+        textureFile.getParentFile().mkdirs();
+        BufferedImage image = BadgeRenderer.render(label, backgroundColor);
+        ImageIO.write(image, "png", textureFile);
+        rebuildPack();
     }
 
     private String sha1(File file) throws IOException, NoSuchAlgorithmException {

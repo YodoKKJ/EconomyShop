@@ -108,6 +108,26 @@ public class TagManager {
         return tags.values();
     }
 
+    public Tag findTag(String id) {
+        return tags.get(id.toLowerCase());
+    }
+
+    public void updateTagColor(String id, NamedTextColor color) {
+        Tag existing = tags.get(id.toLowerCase());
+        if (existing == null) {
+            return;
+        }
+        tags.put(existing.id(), new Tag(existing.id(), existing.display(), color, existing.badgeChar()));
+        customTagsData.set("tags." + existing.id() + ".display", existing.display());
+        customTagsData.set("tags." + existing.id() + ".color", NamedTextColor.NAMES.key(color));
+        try {
+            plugin.getDataFolder().mkdirs();
+            customTagsData.save(customTagsFile);
+        } catch (IOException e) {
+            plugin.getLogger().severe("Falha ao salvar cor da tag: " + e.getMessage());
+        }
+    }
+
     private void savePlayerTags() {
         try {
             plugin.getDataFolder().mkdirs();

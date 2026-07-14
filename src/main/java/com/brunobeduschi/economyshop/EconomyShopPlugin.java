@@ -7,10 +7,12 @@ import com.brunobeduschi.economyshop.commands.PayCommand;
 import com.brunobeduschi.economyshop.commands.ShopCommand;
 import com.brunobeduschi.economyshop.commands.TagCommand;
 import com.brunobeduschi.economyshop.economy.EconomyManager;
+import com.brunobeduschi.economyshop.gui.TagGuiManager;
 import com.brunobeduschi.economyshop.listeners.ChatFormatListener;
 import com.brunobeduschi.economyshop.listeners.PlayerDataListener;
 import com.brunobeduschi.economyshop.listeners.ResourcePackJoinListener;
 import com.brunobeduschi.economyshop.listeners.ShopListener;
+import com.brunobeduschi.economyshop.listeners.TagGuiListener;
 import com.brunobeduschi.economyshop.shop.ShopManager;
 import com.brunobeduschi.economyshop.tag.TagManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -23,6 +25,7 @@ public final class EconomyShopPlugin extends JavaPlugin {
     private ShopManager shopManager;
     private TagManager tagManager;
     private ResourcePackServer resourcePackServer;
+    private TagGuiManager tagGuiManager;
 
     @Override
     public void onEnable() {
@@ -40,11 +43,13 @@ public final class EconomyShopPlugin extends JavaPlugin {
         tagManager = new TagManager(this);
         resourcePackServer = new ResourcePackServer(this);
         resourcePackServer.start();
+        tagGuiManager = new TagGuiManager(this);
 
         getServer().getPluginManager().registerEvents(new PlayerDataListener(this), this);
         getServer().getPluginManager().registerEvents(new ShopListener(this), this);
         getServer().getPluginManager().registerEvents(new ChatFormatListener(this), this);
         getServer().getPluginManager().registerEvents(new ResourcePackJoinListener(this), this);
+        getServer().getPluginManager().registerEvents(new TagGuiListener(this), this);
 
         getCommand("balance").setExecutor(new BalanceCommand(this));
         getCommand("pay").setExecutor(new PayCommand(this));
@@ -77,5 +82,9 @@ public final class EconomyShopPlugin extends JavaPlugin {
 
     public ResourcePackServer getResourcePackServer() {
         return resourcePackServer;
+    }
+
+    public TagGuiManager getTagGuiManager() {
+        return tagGuiManager;
     }
 }

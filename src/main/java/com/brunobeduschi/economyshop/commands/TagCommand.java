@@ -27,7 +27,7 @@ public class TagCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(Component.text("Uso: /tag <set|create|list>", NamedTextColor.RED));
+            sender.sendMessage(Component.text("Uso: /tag <set|create|list|menu>", NamedTextColor.RED));
             return true;
         }
 
@@ -35,9 +35,22 @@ public class TagCommand implements CommandExecutor, TabCompleter {
             case "list" -> showTags(sender);
             case "set" -> setTag(sender, args);
             case "create" -> createTag(sender, args);
-            default -> sender.sendMessage(Component.text("Uso: /tag <set|create|list>", NamedTextColor.RED));
+            case "menu" -> openMenu(sender);
+            default -> sender.sendMessage(Component.text("Uso: /tag <set|create|list|menu>", NamedTextColor.RED));
         }
         return true;
+    }
+
+    private void openMenu(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Component.text("Apenas jogadores podem usar este comando.", NamedTextColor.RED));
+            return;
+        }
+        if (!player.hasPermission("economyshop.tag.admin")) {
+            player.sendMessage(Component.text("Você não tem permissão para isso.", NamedTextColor.RED));
+            return;
+        }
+        player.openInventory(plugin.getTagGuiManager().buildListInventory());
     }
 
     private void createTag(CommandSender sender, String[] args) {
@@ -94,7 +107,7 @@ public class TagCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            return Stream.of("set", "create", "list")
+            return Stream.of("set", "create", "list", "menu")
                     .filter(option -> option.startsWith(args[0].toLowerCase()))
                     .collect(Collectors.toList());
         }

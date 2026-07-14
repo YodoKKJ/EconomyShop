@@ -24,6 +24,7 @@ Plugin de economia para servidores Paper/Spigot, com saldo persistente em banco 
 | `/tag list` | Lista as tags disponíveis | — |
 | `/tag set <jogador> <tag>` | Define a tag de chat de um jogador | `economyshop.tag.admin` (padrão: OP) |
 | `/tag create <id> <cor> <texto>` | Cria uma nova tag em tempo real (sem precisar editar `config.yml` ou reiniciar) | `economyshop.tag.admin` (padrão: OP) |
+| `/tag menu` | Abre uma GUI com a lista de tags, prévia e paleta de cores pra editar cada uma | `economyshop.tag.admin` (padrão: OP) |
 
 ## Configuração (`config.yml`)
 
@@ -64,7 +65,7 @@ O chat do Minecraft só suporta cor de texto — não dá pra desenhar um retân
 3. Quando um jogador entra, o plugin manda um `ResourcePackRequest` (API da Adventure) oferecendo o download — **não é obrigatório**, quem recusar simplesmente vê a tag em texto colorido normal em vez do badge de imagem.
 4. No chat, cada tag com badge usa um `Component` com `.font(Key.key("minecraft:badges"))` isolado (só o glyph do badge usa essa fonte customizada; o resto da mensagem continua na fonte padrão do jogo).
 
-Tags criadas por `/tag create` não têm imagem pronta (precisariam de uma textura nova, gerada fora do jogo) — elas caem automaticamente no visual em texto colorido, que funciona pra qualquer jogador sem precisar baixar nada.
+Tags criadas por `/tag create` não têm imagem pronta — elas caem automaticamente no visual em texto colorido, que funciona pra qualquer jogador sem precisar baixar nada.
 
 Configurável em `config.yml`:
 
@@ -76,6 +77,20 @@ resource-pack:
                     # Em produção, aponte pro IP/domínio público do servidor.
 ```
 
+## Editor de tags via GUI (`/tag menu`)
+
+Pra quem é OP, `/tag menu` abre uma interface de duas telas:
+
+1. **Lista de tags**: um item por tag (cor do item = cor da tag, nome = prévia da tag na cor real, lore avisa se ela tem badge de imagem ou só texto). Clicar em uma abre a tela de edição.
+2. **Editor da tag**: um item de prévia no topo + uma **paleta de 16 cores** (uma lã de cada `NamedTextColor` do Minecraft) — o mais próximo de uma "roda de cores" que dá pra fazer dentro de um inventário do jogo, já que não existe um seletor de cor livre nativo no Minecraft.
+
+Ao clicar numa cor:
+- A cor da tag é salva na hora.
+- Se a tag tiver badge de imagem (as 5 padrão), o plugin **regenera a textura do badge com o novo fundo** (usando `Graphics2D`, o mesmo motor que gerou as imagens originais), reempacota o resource pack, recalcula o hash e **reenvia automaticamente pra todo mundo online** — ninguém precisa relogar pra ver a mudança.
+- A tela se atualiza na hora com a nova prévia.
+
+Como não existe entrada de texto livre dentro de um inventário do Minecraft (sem usar uma bigorna), criar uma tag nova (`id`, cor inicial, texto) continua sendo por `/tag create` — o menu foca em editar/visualizar as que já existem.
+
 ## Arquitetura
 
 ```
@@ -84,11 +99,16 @@ economy/EconomyManager   → acesso ao SQLite, cache thread-safe (ConcurrentHash
 shop/ShopManager         → carrega itens do config.yml, monta o Inventory da loja
 shop/ShopHolder          → InventoryHolder para identificar a GUI da loja nos eventos
 tag/TagManager           → tags configuráveis por config.yml + atribuição por jogador persistida em playertags.yml
-chatpack/ResourcePackServer → extrai o pack do jar, calcula o hash SHA-1, serve via HTTP embutido
+chatpack/ResourcePackServer → extrai/reempacota o resource pack, calcula o hash SHA-1, serve via HTTP embutido
+chatpack/BadgeRenderer   → desenha a imagem de um badge (fundo + texto) via Graphics2D
+gui/TagGuiManager        → monta os inventários de lista e edição de tags
+gui/ColorPalette         → paleta de 16 NamedTextColor mapeados pra lãs coloridas
+gui/TagListHolder, TagEditHolder → InventoryHolder pra identificar cada GUI nos eventos
 commands/                → BalanceCommand, PayCommand, ShopCommand, EcoAdminCommand, TagCommand
 listeners/                → PlayerDataListener (carrega/salva saldo), ShopListener (compra/venda),
                             ChatFormatListener (badge/tag + hover com saldo + clique pra /msg),
-                            ResourcePackJoinListener (oferece o resource pack ao entrar)
+                            ResourcePackJoinListener (oferece o resource pack ao entrar),
+                            TagGuiListener (cliques no editor de tags)
 ```
 
 ## Stack técnica

@@ -25,7 +25,7 @@ commands:
     usage: /ecoadmin <give|take|set> <jogador> <quantia>
   tag:
     description: Gerencia as tags de chat dos jogadores
-    usage: /tag <set|create|list>
+    usage: /tag <set|create|list|menu>
 
 permissions:
   economyshop.balance.others:
