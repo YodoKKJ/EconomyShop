@@ -11,6 +11,7 @@ Plugin de economia para servidores Paper/Spigot, com saldo persistente em banco 
 - Comandos administrativos para dar, tirar ou definir saldo de qualquer jogador.
 - **Chat personalizado com tags coloridas**: cada jogador tem uma tag configurável (ex: `[VIP]`, `[DONO]`), cada uma com sua própria cor, exibida antes do nome no chat.
 - Passar o mouse no nome de um jogador no chat mostra o saldo dele; clicar no nome já prepara um `/msg` pronto pra digitar.
+- **Badges de verdade no chat**: as 5 tags padrão (`membro`, `vip`, `mod`, `admin`, `dono`) são renderizadas como um selinho colorido de imagem (fundo + texto), não só texto colorido — via um **resource pack customizado** que o próprio plugin gera, hospeda e envia automaticamente pro jogador ao entrar.
 
 ## Comandos
 
@@ -54,6 +55,27 @@ Cada entrada em `shop-items` vira um item clicável na loja. `material` é o nom
 
 Cada entrada em `tags` define uma tag disponível, com texto de exibição e cor. Além de editar o `config.yml`, também dá pra criar tags direto em jogo com `/tag create <id> <cor> <texto>` — elas ficam salvas em `tags.yml` e persistem entre reinícios.
 
+## Badges de chat (resource pack)
+
+O chat do Minecraft só suporta cor de texto — não dá pra desenhar um retângulo colorido atrás de uma palavra sem imagem. Pra ter um badge "de verdade" como em servidores com identidade visual própria, o plugin:
+
+1. Já vem com um **resource pack pronto** embutido no jar (`resourcepack/pack.zip`), com uma imagem por tag padrão (fundo colorido + texto da tag desenhado nela) mapeada como um caractere customizado via `assets/minecraft/font/badges.json`.
+2. No `onEnable`, extrai esse pack pra pasta de dados do plugin, calcula o hash SHA-1 dele, e sobe um **servidor HTTP embutido** (via `com.sun.net.httpserver.HttpServer`, sem dependências externas) pra servir o arquivo.
+3. Quando um jogador entra, o plugin manda um `ResourcePackRequest` (API da Adventure) oferecendo o download — **não é obrigatório**, quem recusar simplesmente vê a tag em texto colorido normal em vez do badge de imagem.
+4. No chat, cada tag com badge usa um `Component` com `.font(Key.key("minecraft:badges"))` isolado (só o glyph do badge usa essa fonte customizada; o resto da mensagem continua na fonte padrão do jogo).
+
+Tags criadas por `/tag create` não têm imagem pronta (precisariam de uma textura nova, gerada fora do jogo) — elas caem automaticamente no visual em texto colorido, que funciona pra qualquer jogador sem precisar baixar nada.
+
+Configurável em `config.yml`:
+
+```yaml
+resource-pack:
+  enabled: true
+  port: 34567
+  public-url: ""   # em branco = http://127.0.0.1:<port>/..., só funciona localmente.
+                    # Em produção, aponte pro IP/domínio público do servidor.
+```
+
 ## Arquitetura
 
 ```
@@ -62,9 +84,11 @@ economy/EconomyManager   → acesso ao SQLite, cache thread-safe (ConcurrentHash
 shop/ShopManager         → carrega itens do config.yml, monta o Inventory da loja
 shop/ShopHolder          → InventoryHolder para identificar a GUI da loja nos eventos
 tag/TagManager           → tags configuráveis por config.yml + atribuição por jogador persistida em playertags.yml
+chatpack/ResourcePackServer → extrai o pack do jar, calcula o hash SHA-1, serve via HTTP embutido
 commands/                → BalanceCommand, PayCommand, ShopCommand, EcoAdminCommand, TagCommand
 listeners/                → PlayerDataListener (carrega/salva saldo), ShopListener (compra/venda),
-                            ChatFormatListener (tag colorida + hover com saldo + clique pra /msg)
+                            ChatFormatListener (badge/tag + hover com saldo + clique pra /msg),
+                            ResourcePackJoinListener (oferece o resource pack ao entrar)
 ```
 
 ## Stack técnica

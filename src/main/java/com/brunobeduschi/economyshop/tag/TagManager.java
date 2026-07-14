@@ -14,6 +14,16 @@ import java.util.Map;
 
 public class TagManager {
 
+    // Tags com um badge de imagem pronto no resource pack (assets/minecraft/font/badges.json).
+    // Qualquer outra tag (incluindo as criadas por /tag create) cai no visual em texto colorido.
+    private static final Map<String, Character> BADGE_CHARS = Map.of(
+            "membro", '',
+            "vip", '',
+            "mod", '',
+            "admin", '',
+            "dono", ''
+    );
+
     private final EconomyShopPlugin plugin;
     private final File playerTagsFile;
     private final YamlConfiguration playerTagsData;
@@ -45,7 +55,8 @@ public class TagManager {
             }
             String display = tagSection.getString("display", "[" + id.toUpperCase() + "]");
             NamedTextColor color = parseColor(tagSection.getString("color", "gray"));
-            tags.put(id.toLowerCase(), new Tag(id.toLowerCase(), display, color));
+            Character badgeChar = BADGE_CHARS.get(id.toLowerCase());
+            tags.put(id.toLowerCase(), new Tag(id.toLowerCase(), display, color, badgeChar));
         }
     }
 
@@ -64,7 +75,7 @@ public class TagManager {
     }
 
     public Tag getDefaultTag() {
-        return tags.getOrDefault(defaultTagId, new Tag(defaultTagId, "[Membro]", NamedTextColor.GRAY));
+        return tags.getOrDefault(defaultTagId, new Tag(defaultTagId, "[Membro]", NamedTextColor.GRAY, null));
     }
 
     public boolean hasTag(String id) {
@@ -73,7 +84,7 @@ public class TagManager {
 
     public void createTag(String id, String display, NamedTextColor color) {
         String key = id.toLowerCase();
-        tags.put(key, new Tag(key, display, color));
+        tags.put(key, new Tag(key, display, color, null));
         customTagsData.set("tags." + key + ".display", display);
         customTagsData.set("tags." + key + ".color", NamedTextColor.NAMES.key(color));
         try {

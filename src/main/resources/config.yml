@@ -23,6 +23,19 @@ tags:
     display: "[DONO]"
     color: light_purple
 
+# As tags membro/vip/mod/admin/dono acima já têm um "badge" de imagem pronto
+# (fundo colorido, tipo um selo) via resource pack. Tags criadas com /tag create
+# não têm badge de imagem e usam o texto colorido acima como alternativa.
+resource-pack:
+  enabled: true
+  port: 34567
+  # Endereço público pelo qual os jogadores vão baixar o resource pack.
+  # Deixe em branco para usar http://127.0.0.1:<port>/resourcepack.zip,
+  # que só funciona se o jogador estiver na mesma máquina do servidor.
+  # Em produção, configure aqui o IP/domínio público do seu servidor, ex:
+  # public-url: "http://seu-ip-ou-dominio:34567/resourcepack.zip"
+  public-url: ""
+
 shop-items:
   pao:
     material: BREAD
