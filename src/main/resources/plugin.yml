@@ -1,7 +1,7 @@
 name: EconomyShop
 version: 1.0.0
 main: com.brunobeduschi.economyshop.EconomyShopPlugin
-description: Sistema de economia com loja via GUI
+description: Sistema de economia com loja via GUI e chat com tags coloridas
 author: BrunoBeduschi
 api-version: '26.1.2'
 
@@ -23,6 +23,9 @@ commands:
   ecoadmin:
     description: Comandos administrativos de economia
     usage: /ecoadmin <give|take|set> <jogador> <quantia>
+  tag:
+    description: Gerencia as tags de chat dos jogadores
+    usage: /tag <set|list>
 
 permissions:
   economyshop.balance.others:
@@ -30,4 +33,7 @@ permissions:
     default: op
   economyshop.admin:
     description: Permite usar comandos administrativos de economia
+    default: op
+  economyshop.tag.admin:
+    description: Permite definir a tag de chat de outros jogadores
     default: op

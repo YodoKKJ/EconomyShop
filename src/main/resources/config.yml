@@ -1,5 +1,28 @@
 starting-balance: 100.0
 
+# Tag exibida antes do nome do jogador no chat. Cada uma tem cor própria.
+# Cores válidas: qualquer NamedTextColor do Adventure (black, dark_blue, dark_green,
+# dark_aqua, dark_red, dark_purple, gold, gray, dark_gray, blue, green, aqua, red,
+# light_purple, yellow, white).
+default-tag: membro
+
+tags:
+  membro:
+    display: "[Membro]"
+    color: gray
+  vip:
+    display: "[VIP]"
+    color: gold
+  mod:
+    display: "[MOD]"
+    color: aqua
+  admin:
+    display: "[ADMIN]"
+    color: red
+  dono:
+    display: "[DONO]"
+    color: light_purple
+
 shop-items:
   pao:
     material: BREAD
